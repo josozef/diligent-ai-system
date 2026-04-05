@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Box } from "@mui/material";
 import { useTokens } from "../../../hooks/useTokens";
 import WorkspaceHeader from "./WorkspaceHeader";

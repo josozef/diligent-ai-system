@@ -776,7 +776,7 @@ function CollectDataStep({
 /* ── Step 4: Board approval ─────────────────────────────────────── */
 
 function BoardApprovalStep({ agenticState }: { agenticState: AgenticProcessState }) {
-  const { color, weight, radius } = useTokens();
+  const { color, weight } = useTokens();
 
   const approvedCount = agenticState.votes.filter((v) => v.status === "approved").length;
   const totalVotes = agenticState.votes.length;

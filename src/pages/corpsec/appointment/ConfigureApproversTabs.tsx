@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Box, Button, Chip, Collapse, Divider, IconButton } from "@mui/material";
+import { Box, Button, Chip, Collapse, IconButton } from "@mui/material";
 import {
   CheckCircleIcon,
   CloseIcon,
@@ -9,11 +9,7 @@ import {
   PersonAddOutlinedIcon,
   GroupsOutlinedIcon,
   HowToVoteOutlinedIcon,
-  PlayArrowOutlinedIcon,
-  GavelOutlinedIcon,
   RadioButtonUncheckedIcon,
-  SendOutlinedIcon,
-  DescriptionOutlinedIcon,
 } from "@/icons";
 import TradAtlasText from "@/components/common/TradAtlasText";
 import { SF, semanticFontStyle } from "@/tokens/tradAtlasSemanticTypography";
