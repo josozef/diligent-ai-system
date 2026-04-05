@@ -1,13 +1,13 @@
-import { Box, Stack, Typography } from "@mui/material";
-import NorthEastIcon from "@mui/icons-material/NorthEast";
+import { Box, Stack } from "@mui/material";
+import { NorthEastIcon } from "@/icons";
+import TradAtlasText from "../common/TradAtlasText";
+import { SF } from "@/tokens/tradAtlasSemanticTypography";
 import ThinkingPanel from "./ThinkingPanel";
 import MessageBubble from "./MessageBubble";
 import FeedbackBar from "./FeedbackBar";
 import RevealSection from "./RevealSection";
-import {
-  atlasSemanticColor as color,
-  atlasFontWeight as weight,
-} from "../../tokens/atlasLight";
+import { atlasSemanticColor as color } from "../../tokens/atlasLight";
+import type { ChatPresentationDensity } from "./chatPresentation";
 
 export type ChatPhase = "idle" | "thinking" | "responding" | "done";
 
@@ -31,18 +31,9 @@ function SuggestionChipFooter({ label }: { label: string }) {
         "&:hover": { background: color.surface.variant },
       }}
     >
-      <Typography
-        sx={{
-          fontWeight: weight.semiBold,
-          fontSize: "14px",
-          lineHeight: "20px",
-          letterSpacing: "0.2px",
-          color: color.type.default,
-          px: "8px",
-        }}
-      >
+      <TradAtlasText semanticFont={SF.textMdEmphasis} sx={{ px: "8px" }}>
         {label}
-      </Typography>
+      </TradAtlasText>
       <NorthEastIcon sx={{ fontSize: 16, color: color.type.default }} />
     </Box>
   );
@@ -61,6 +52,13 @@ interface ChatThreadProps {
   visibleSections: number;
   /** Suggested follow-up actions shown in the footer. */
   suggestedActions?: string[];
+  /** Workflow-style layout: full-width thread and user bubble. */
+  threadFullWidth?: boolean;
+  userMessageFullWidth?: boolean;
+  /** Shown on the user message bubble (e.g. re-run the simulated response). */
+  onRerunPrompt?: () => void;
+  /** `relaxed` for full-page chat; `compact` for narrow rails (spacing + nested components). */
+  density?: ChatPresentationDensity;
 }
 
 export default function ChatThread({
@@ -73,25 +71,38 @@ export default function ChatThread({
   responseSections,
   visibleSections,
   suggestedActions = ["Get started on next step", "Summarize article", "Analyze data"],
+  threadFullWidth = false,
+  userMessageFullWidth = false,
+  onRerunPrompt,
+  density = "relaxed",
 }: ChatThreadProps) {
   const showThread = phase !== "idle";
   if (!showThread) return null;
 
   const isThinking = phase === "thinking";
 
+  const isCompact = density === "compact";
+
   return (
     <Box
       sx={{
-        maxWidth: 640,
+        maxWidth: threadFullWidth ? "none" : 640,
         width: "100%",
-        mx: "auto",
+        mx: threadFullWidth ? 0 : "auto",
         display: "flex",
         flexDirection: "column",
-        gap: "40px",
-        py: "24px",
+        gap: isCompact ? "24px" : "40px",
+        py: isCompact ? "16px" : "24px",
       }}
     >
-      <MessageBubble>{userMessage}</MessageBubble>
+      <MessageBubble
+        messageRole="prompt"
+        density={density}
+        fullWidth={userMessageFullWidth}
+        onRerun={phase === "done" ? onRerunPrompt : undefined}
+      >
+        {userMessage}
+      </MessageBubble>
 
       <ThinkingPanel
         steps={thinkingSteps}
@@ -99,10 +110,11 @@ export default function ChatThread({
         activeStep={activeThinkingStep}
         open={thinkingOpen}
         onToggle={onToggleThinking}
+        density={density}
       />
 
       {(phase === "responding" || phase === "done") && (
-        <Stack spacing="24px" sx={{ width: "100%" }}>
+        <Stack spacing={isCompact ? "16px" : "24px"} sx={{ width: "100%" }}>
           {responseSections.map((section, idx) =>
             visibleSections >= idx + 1 ? (
               <RevealSection key={idx}>{section}</RevealSection>
@@ -115,17 +127,9 @@ export default function ChatThread({
               <Box sx={{ display: "flex", flexDirection: "column", gap: "16px", width: "100%", pt: "8px" }}>
                 <FeedbackBar />
                 <Box sx={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                  <Typography
-                    sx={{
-                      fontSize: "14px",
-                      lineHeight: "20px",
-                      letterSpacing: "0.2px",
-                      fontWeight: weight.regular,
-                      color: color.type.muted,
-                    }}
-                  >
+                  <TradAtlasText semanticFont={SF.textMd} sx={{ color: color.type.muted }}>
                     Suggested actions
-                  </Typography>
+                  </TradAtlasText>
                   <Box sx={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
                     {suggestedActions.map((label) => (
                       <SuggestionChipFooter key={label} label={label} />

@@ -1,25 +1,53 @@
-import { Box, Chip, Divider, Typography } from "@mui/material";
-import AutoAwesomeOutlinedIcon from "@mui/icons-material/AutoAwesomeOutlined";
-import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
-import RadioButtonUncheckedIcon from "@mui/icons-material/RadioButtonUnchecked";
-import WarningAmberIcon from "@mui/icons-material/WarningAmber";
-import PersonOutlinedIcon from "@mui/icons-material/PersonOutlined";
-import BusinessOutlinedIcon from "@mui/icons-material/BusinessOutlined";
-import PublicOutlinedIcon from "@mui/icons-material/PublicOutlined";
-import EventOutlinedIcon from "@mui/icons-material/EventOutlined";
-import GavelOutlinedIcon from "@mui/icons-material/GavelOutlined";
-import HowToVoteOutlinedIcon from "@mui/icons-material/HowToVoteOutlined";
-import UploadFileOutlinedIcon from "@mui/icons-material/UploadFileOutlined";
-import StorageOutlinedIcon from "@mui/icons-material/StorageOutlined";
-import SearchOutlinedIcon from "@mui/icons-material/SearchOutlined";
+import { Fragment } from "react";
+import { Box, Button, Chip, CircularProgress, Divider, LinearProgress } from "@mui/material";
+import CollectAppointmentDataTabs from "./CollectAppointmentDataTabs";
+import ConfigureApproversTabs from "./ConfigureApproversTabs";
+import type { ApproverTabStatus } from "./ConfigureApproversTabs";
+import type { SxProps, Theme } from "@mui/material/styles";
+import {
+  AutoAwesomeOutlinedIcon,
+  CheckCircleOutlineIcon,
+  CheckCircleIcon,
+  RadioButtonUncheckedIcon,
+  WarningAmberIcon,
+  PersonOutlinedIcon,
+  BusinessOutlinedIcon,
+  PublicOutlinedIcon,
+  EventOutlinedIcon,
+  HowToVoteOutlinedIcon,
+  UploadFileOutlinedIcon,
+  StorageOutlinedIcon,
+  SearchOutlinedIcon,
+} from "@/icons";
+import TradAtlasText from "@/components/common/TradAtlasText";
+import ContentCard from "@/components/common/ContentCard";
+import SectionHeader from "@/components/common/SectionHeader";
+import DetailRow from "@/components/common/DetailRow";
+import StatusSubstepRow from "@/components/common/StatusSubstepRow";
+import { DATA_SEMANTIC_FONT, SF, semanticFontStyle } from "@/tokens/tradAtlasSemanticTypography";
 import { useTokens } from "../../../hooks/useTokens";
-import type { WorkflowStep, WorkflowStepId } from "./AppointmentWorkspace";
+import type { WorkflowStep, WorkflowStepId, AgenticProcessState } from "./AppointmentWorkspace";
+
+export interface CollectDataTabStatus {
+  entities: boolean;
+  consent: boolean;
+}
 
 interface WorkPanelProps {
   activeStepId: WorkflowStepId | null;
   steps: WorkflowStep[];
   selectedCandidate: string | null;
   onSelectCandidate: (name: string) => void;
+  collectDataTabStatus: CollectDataTabStatus;
+  appointmentNric: string | null;
+  appointmentEffectiveDate: string | null;
+  onCollectDataEntitiesComplete: (payload: { nric: string; effectiveDate: string }) => void;
+  onCollectDataConsentComplete: () => void;
+  onReplaceConsentDocument: (file: File) => void;
+  approverTabStatus: ApproverTabStatus;
+  onApproversConfirmed: () => void;
+  onResolutionSent: () => void;
+  agenticState: AgenticProcessState;
 }
 
 export default function WorkPanel({
@@ -27,8 +55,21 @@ export default function WorkPanel({
   steps,
   selectedCandidate,
   onSelectCandidate,
+  collectDataTabStatus,
+  appointmentNric,
+  appointmentEffectiveDate,
+  onCollectDataEntitiesComplete,
+  onCollectDataConsentComplete,
+  onReplaceConsentDocument,
+  approverTabStatus,
+  onApproversConfirmed,
+  onResolutionSent,
+  agenticState,
 }: WorkPanelProps) {
   const { color } = useTokens();
+
+  const isCollectData = activeStepId === "collect-data";
+  const isSelectApprovers = activeStepId === "select-approvers";
 
   return (
     <Box
@@ -40,170 +81,91 @@ export default function WorkPanel({
         background: color.surface.subtle,
       }}
     >
-      <Box sx={{ flex: 1, overflow: "auto", p: "24px" }}>
-        {activeStepId === null ? (
-          <OverviewContent steps={steps} selectedCandidate={selectedCandidate} />
-        ) : activeStepId === "identify-candidate" ? (
-          <IdentifyCandidateStep
-            selectedCandidate={selectedCandidate}
-            onSelectCandidate={onSelectCandidate}
-          />
-        ) : activeStepId === "collect-data" ? (
-          <CollectDataStep selectedCandidate={selectedCandidate} />
-        ) : activeStepId === "select-approvers" ? (
-          <ConfigureApproversStep />
-        ) : activeStepId === "board-approval" ? (
-          <BoardApprovalStep />
-        ) : activeStepId === "filing" ? (
-          <RegulatoryFilingStep />
-        ) : activeStepId === "update-entities" ? (
-          <UpdateEntitiesStep selectedCandidate={selectedCandidate} />
-        ) : null}
-      </Box>
+      {isCollectData ? (
+        <CollectDataStep
+          steps={steps}
+          selectedCandidate={selectedCandidate}
+          collectDataTabStatus={collectDataTabStatus}
+          appointmentNric={appointmentNric}
+          appointmentEffectiveDate={appointmentEffectiveDate}
+          onEntitiesComplete={onCollectDataEntitiesComplete}
+          onConsentComplete={onCollectDataConsentComplete}
+          onReplaceConsentDocument={onReplaceConsentDocument}
+        />
+      ) : isSelectApprovers ? (
+        <ConfigureApproversTabs
+          tabStatus={approverTabStatus}
+          onApproversConfirmed={onApproversConfirmed}
+          onResolutionSent={onResolutionSent}
+        />
+      ) : (
+        <Box sx={{ flex: 1, overflow: "auto", p: "24px" }}>
+          {activeStepId === null ? (
+            <OverviewContent
+              steps={steps}
+              selectedCandidate={selectedCandidate}
+              collectDataTabStatus={collectDataTabStatus}
+              approverTabStatus={approverTabStatus}
+            />
+          ) : activeStepId === "identify-candidate" ? (
+            <IdentifyCandidateStep
+              selectedCandidate={selectedCandidate}
+              onSelectCandidate={onSelectCandidate}
+            />
+          ) : activeStepId === "board-approval" ? (
+            <BoardApprovalStep agenticState={agenticState} />
+          ) : activeStepId === "filing" ? (
+            <RegulatoryFilingStep agenticState={agenticState} />
+          ) : activeStepId === "update-entities" ? (
+            <UpdateEntitiesStep selectedCandidate={selectedCandidate} agenticState={agenticState} />
+          ) : null}
+        </Box>
+      )}
     </Box>
   );
 }
 
 /* ── Shared ─────────────────────────────────────────────────────── */
 
-function SummaryCard({ children, sx }: { children: React.ReactNode; sx?: object }) {
-  const { color, radius } = useTokens();
-  return (
-    <Box
-      sx={{
-        borderRadius: radius.lg,
-        border: `1px solid ${color.outline.fixed}`,
-        background: color.surface.default,
-        p: "20px",
-        ...sx,
-      }}
-    >
-      {children}
-    </Box>
-  );
-}
 
-function StepHeader({
-  title,
-  subtitle,
-  statusLabel,
-  statusVariant,
-}: {
-  title: string;
-  subtitle: string;
-  statusLabel: string;
-  statusVariant: "in_progress" | "not_started" | "completed";
-}) {
-  const { color, weight } = useTokens();
-  const chipColor =
-    statusVariant === "completed"
-      ? color.status.success.default
-      : statusVariant === "in_progress"
-        ? color.action.primary.default
-        : color.type.disabled;
 
-  return (
-    <Box sx={{ mb: "20px" }}>
-      <Box sx={{ display: "flex", alignItems: "center", gap: "10px", mb: "4px" }}>
-        <Typography
-          sx={{
-            fontSize: "18px",
-            lineHeight: "28px",
-            fontWeight: weight.semiBold,
-            color: color.type.default,
-          }}
-        >
-          {title}
-        </Typography>
-        <Chip
-          label={statusLabel}
-          size="small"
-          sx={{
-            backgroundColor: chipColor,
-            color: "#fff",
-            fontWeight: weight.semiBold,
-            fontSize: "10px",
-            height: 20,
-            letterSpacing: "0.5px",
-          }}
-        />
-      </Box>
-      <Typography sx={{ fontSize: "14px", lineHeight: "20px", color: color.type.muted }}>
-        {subtitle}
-      </Typography>
-    </Box>
-  );
-}
-
-function DetailRow({
-  icon,
-  label,
-  value,
-  muted,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  value: string;
-  muted?: boolean;
-}) {
-  const { color, weight } = useTokens();
-  return (
-    <Box sx={{ display: "flex", alignItems: "flex-start", gap: "8px" }}>
-      <Box sx={{ color: color.type.muted, mt: "2px" }}>{icon}</Box>
-      <Box>
-        <Typography
-          sx={{ fontSize: "11px", lineHeight: "16px", color: color.type.muted, fontWeight: weight.medium }}
-        >
-          {label}
-        </Typography>
-        <Typography
-          sx={{
-            fontSize: "13px",
-            lineHeight: "20px",
-            color: muted ? color.type.disabled : color.type.default,
-            fontWeight: weight.medium,
-            fontStyle: muted ? "italic" : "normal",
-          }}
-        >
-          {value}
-        </Typography>
-      </Box>
-    </Box>
-  );
-}
 
 /* ── Global overview (no step selected) ─────────────────────────── */
 
 function OverviewContent({
   steps,
   selectedCandidate,
+  collectDataTabStatus,
+  approverTabStatus,
 }: {
   steps: WorkflowStep[];
   selectedCandidate: string | null;
+  collectDataTabStatus: CollectDataTabStatus;
+  approverTabStatus: ApproverTabStatus;
 }) {
   const { color, weight, radius } = useTokens();
 
   return (
     <Box sx={{ maxWidth: 720, display: "flex", flexDirection: "column", gap: "24px" }}>
       <Box sx={{ display: "flex", alignItems: "center", gap: "10px" }}>
-        <Typography
+        <TradAtlasText
+          semanticFont={SF.titleH4Emphasis}
           sx={{
-            fontSize: "18px",
-            lineHeight: "28px",
             fontWeight: weight.semiBold,
             color: color.type.default,
           }}
         >
           Board appointment overview
-        </Typography>
+        </TradAtlasText>
         <Chip
           label="IN PROGRESS"
           size="small"
+          {...{ [DATA_SEMANTIC_FONT]: SF.textXs }}
           sx={{
+            ...semanticFontStyle(SF.textXs),
             backgroundColor: color.action.primary.default,
             color: "#fff",
             fontWeight: weight.semiBold,
-            fontSize: "10px",
             height: 20,
             letterSpacing: "0.5px",
           }}
@@ -211,45 +173,44 @@ function OverviewContent({
       </Box>
 
       {/* AI summary */}
-      <SummaryCard>
+      <ContentCard>
         <Box sx={{ display: "flex", alignItems: "flex-start", gap: "12px", mb: "16px" }}>
           <AutoAwesomeOutlinedIcon
             sx={{ fontSize: 18, color: color.action.primary.default, mt: "2px" }}
           />
-          <Typography sx={{ fontSize: "14px", lineHeight: "22px", color: color.type.default }}>
-            <Box component="span" sx={{ fontWeight: weight.semiBold }}>
+          <TradAtlasText semanticFont={SF.textMd} sx={{ color: color.type.default }}>
+            <TradAtlasText component="span" semanticFont={SF.textMd} sx={{ fontWeight: weight.semiBold }}>
               Workday has reported
-            </Box>{" "}
+            </TradAtlasText>{" "}
             that Wei "David" Chen, Vice President of Commercial Operations (APAC), has submitted his
             resignation from Pacific Polymer Logistics Pte. Ltd. His last working day is{" "}
-            <Box component="span" sx={{ fontWeight: weight.semiBold }}>
+            <TradAtlasText component="span" semanticFont={SF.textMd} sx={{ fontWeight: weight.semiBold }}>
               April 17, 2026
-            </Box>{" "}
+            </TradAtlasText>{" "}
             — 14 days from now. The board will need to appoint a replacement director to maintain
             governance compliance with ACRA requirements in Singapore.
-          </Typography>
+          </TradAtlasText>
         </Box>
         <Divider sx={{ borderColor: color.outline.fixed, my: "12px" }} />
-        <Typography sx={{ fontSize: "13px", lineHeight: "20px", color: color.type.muted }}>
+        <TradAtlasText semanticFont={SF.labelMd} sx={{ color: color.type.muted }}>
           This workspace will guide you through identifying a qualified replacement candidate,
           collecting appointment data, routing the board resolution for approval, filing with ACRA,
           and updating entity records. The AI assistant on the right can answer questions at any step.
-        </Typography>
-      </SummaryCard>
+        </TradAtlasText>
+      </ContentCard>
 
       {/* Key details */}
-      <SummaryCard>
-        <Typography
+      <ContentCard>
+        <TradAtlasText
+          semanticFont={SF.textMd}
           sx={{
-            fontSize: "14px",
-            lineHeight: "20px",
             fontWeight: weight.semiBold,
             color: color.type.default,
             mb: "16px",
           }}
         >
           Appointment details
-        </Typography>
+        </TradAtlasText>
         <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
           <DetailRow
             icon={<BusinessOutlinedIcon sx={{ fontSize: 16 }} />}
@@ -284,21 +245,20 @@ function OverviewContent({
             muted
           />
         </Box>
-      </SummaryCard>
+      </ContentCard>
 
       {/* Jurisdictional requirements */}
-      <SummaryCard>
-        <Typography
+      <ContentCard>
+        <TradAtlasText
+          semanticFont={SF.textMd}
           sx={{
-            fontSize: "14px",
-            lineHeight: "20px",
             fontWeight: weight.semiBold,
             color: color.type.default,
             mb: "12px",
           }}
         >
           Singapore jurisdictional requirements
-        </Typography>
+        </TradAtlasText>
         <Box sx={{ display: "flex", flexDirection: "column", gap: "8px" }}>
           {[
             "Director must be a natural person, at least 18 years of age",
@@ -319,80 +279,131 @@ function OverviewContent({
                   mt: "7px",
                 }}
               />
-              <Typography sx={{ fontSize: "13px", lineHeight: "20px", color: color.type.muted }}>
+              <TradAtlasText semanticFont={SF.labelMd} sx={{ color: color.type.muted }}>
                 {req}
-              </Typography>
+              </TradAtlasText>
             </Box>
           ))}
         </Box>
-      </SummaryCard>
+      </ContentCard>
 
       {/* Workflow status */}
-      <SummaryCard>
-        <Typography
+      <ContentCard>
+        <TradAtlasText
+          semanticFont={SF.textMd}
           sx={{
-            fontSize: "14px",
-            lineHeight: "20px",
             fontWeight: weight.semiBold,
             color: color.type.default,
             mb: "16px",
           }}
         >
           Workflow progress
-        </Typography>
+        </TradAtlasText>
         <Box sx={{ display: "flex", flexDirection: "column", gap: "8px" }}>
           {steps.map((step) => (
-            <Box
-              key={step.id}
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                gap: "10px",
-                py: "6px",
-                px: "8px",
-                borderRadius: radius.sm,
-              }}
-            >
-              {step.status === "completed" ? (
-                <CheckCircleOutlineIcon sx={{ fontSize: 18, color: color.status.success.default }} />
-              ) : step.status === "in_progress" ? (
-                <WarningAmberIcon sx={{ fontSize: 18, color: color.action.primary.default }} />
-              ) : (
-                <RadioButtonUncheckedIcon sx={{ fontSize: 18, color: color.outline.fixed }} />
+            <Fragment key={step.id}>
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "10px",
+                  py: "6px",
+                  px: "8px",
+                  borderRadius: radius.sm,
+                }}
+              >
+                {step.status === "completed" ? (
+                  <CheckCircleOutlineIcon sx={{ fontSize: 18, color: color.status.success.default }} />
+                ) : step.status === "in_progress" ? (
+                  <WarningAmberIcon sx={{ fontSize: 18, color: color.action.primary.default }} />
+                ) : (
+                  <RadioButtonUncheckedIcon sx={{ fontSize: 18, color: color.outline.fixed }} />
+                )}
+                <TradAtlasText
+                  semanticFont={SF.labelMd}
+                  sx={{
+                    color: step.status === "not_started" ? color.type.muted : color.type.default,
+                    fontWeight: step.status === "in_progress" ? weight.semiBold : weight.regular,
+                    flex: 1,
+                  }}
+                >
+                  {step.name}
+                </TradAtlasText>
+                <TradAtlasText
+                  semanticFont={SF.textMicro}
+                  sx={{
+                    color:
+                      step.status === "completed"
+                        ? color.status.success.text
+                        : step.status === "in_progress"
+                          ? color.action.primary.default
+                          : color.type.disabled,
+                    fontWeight: weight.medium,
+                  }}
+                >
+                  {step.status === "completed"
+                    ? "Complete"
+                    : step.status === "in_progress"
+                      ? "In progress"
+                      : "Not started"}
+                </TradAtlasText>
+              </Box>
+              {step.id === "collect-data" && step.status !== "not_started" && (
+                <Box sx={{ pl: "28px", display: "flex", flexDirection: "column", gap: "4px", mt: "-4px", mb: "4px" }}>
+                  <Box sx={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                    {collectDataTabStatus.entities ? (
+                      <CheckCircleOutlineIcon sx={{ fontSize: 14, color: color.status.success.default }} />
+                    ) : (
+                      <RadioButtonUncheckedIcon sx={{ fontSize: 14, color: color.outline.fixed }} />
+                    )}
+                    <TradAtlasText semanticFont={SF.textMicro} sx={{ color: color.type.muted }}>
+                      Entities & appointment
+                      {collectDataTabStatus.entities ? " — saved" : ""}
+                    </TradAtlasText>
+                  </Box>
+                  <Box sx={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                    {collectDataTabStatus.consent ? (
+                      <CheckCircleOutlineIcon sx={{ fontSize: 14, color: color.status.success.default }} />
+                    ) : (
+                      <RadioButtonUncheckedIcon sx={{ fontSize: 14, color: color.outline.fixed }} />
+                    )}
+                    <TradAtlasText semanticFont={SF.textMicro} sx={{ color: color.type.muted }}>
+                      Consent to act document
+                      {collectDataTabStatus.consent ? " — sent for signature" : ""}
+                    </TradAtlasText>
+                  </Box>
+                </Box>
               )}
-              <Typography
-                sx={{
-                  fontSize: "13px",
-                  lineHeight: "18px",
-                  color: step.status === "not_started" ? color.type.muted : color.type.default,
-                  fontWeight: step.status === "in_progress" ? weight.semiBold : weight.regular,
-                  flex: 1,
-                }}
-              >
-                {step.name}
-              </Typography>
-              <Typography
-                sx={{
-                  fontSize: "11px",
-                  color:
-                    step.status === "completed"
-                      ? color.status.success.text
-                      : step.status === "in_progress"
-                        ? color.action.primary.default
-                        : color.type.disabled,
-                  fontWeight: weight.medium,
-                }}
-              >
-                {step.status === "completed"
-                  ? "Complete"
-                  : step.status === "in_progress"
-                    ? "In progress"
-                    : "Not started"}
-              </Typography>
-            </Box>
+              {step.id === "select-approvers" && step.status !== "not_started" && (
+                <Box sx={{ pl: "28px", display: "flex", flexDirection: "column", gap: "4px", mt: "-4px", mb: "4px" }}>
+                  <Box sx={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                    {approverTabStatus.approversConfirmed ? (
+                      <CheckCircleOutlineIcon sx={{ fontSize: 14, color: color.status.success.default }} />
+                    ) : (
+                      <RadioButtonUncheckedIcon sx={{ fontSize: 14, color: color.outline.fixed }} />
+                    )}
+                    <TradAtlasText semanticFont={SF.textMicro} sx={{ color: color.type.muted }}>
+                      Select approvers
+                      {approverTabStatus.approversConfirmed ? " — confirmed" : ""}
+                    </TradAtlasText>
+                  </Box>
+                  <Box sx={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                    {approverTabStatus.resolutionSent ? (
+                      <CheckCircleOutlineIcon sx={{ fontSize: 14, color: color.status.success.default }} />
+                    ) : (
+                      <RadioButtonUncheckedIcon sx={{ fontSize: 14, color: color.outline.fixed }} />
+                    )}
+                    <TradAtlasText semanticFont={SF.textMicro} sx={{ color: color.type.muted }}>
+                      Board resolution
+                      {approverTabStatus.resolutionSent ? " — sent for signature" : ""}
+                    </TradAtlasText>
+                  </Box>
+                </Box>
+              )}
+            </Fragment>
           ))}
         </Box>
-      </SummaryCard>
+      </ContentCard>
     </Box>
   );
 }
@@ -440,7 +451,7 @@ function IdentifyCandidateStep({
 
   return (
     <Box sx={{ maxWidth: 720, display: "flex", flexDirection: "column", gap: "20px" }}>
-      <StepHeader
+      <SectionHeader
         title="Identify replacement candidate"
         subtitle="Source candidates from Workday and screen against Singapore Companies Act requirements. The system ranks candidates by jurisdictional eligibility and role suitability."
         statusLabel="IN PROGRESS"
@@ -448,38 +459,37 @@ function IdentifyCandidateStep({
       />
 
       {/* Workday source card */}
-      <SummaryCard>
+      <ContentCard>
         <Box sx={{ display: "flex", alignItems: "flex-start", gap: "12px" }}>
           <SearchOutlinedIcon
             sx={{ fontSize: 18, color: color.action.primary.default, mt: "2px" }}
           />
           <Box>
-            <Typography
+            <TradAtlasText
+              semanticFont={SF.textMd}
               sx={{
-                fontSize: "14px",
-                lineHeight: "22px",
                 color: color.type.default,
                 fontWeight: weight.semiBold,
                 mb: "4px",
               }}
             >
               Workday integration
-            </Typography>
-            <Typography sx={{ fontSize: "13px", lineHeight: "20px", color: color.type.muted }}>
+            </TradAtlasText>
+            <TradAtlasText semanticFont={SF.labelMd} sx={{ color: color.type.muted }}>
               Connected to Acme, Inc. Workday tenant. Queried employees associated with Pacific
               Polymer Logistics Pte. Ltd. who hold eligible titles and meet minimum tenure
               requirements. Results filtered against Singapore Companies Act director eligibility
               criteria.
-            </Typography>
+            </TradAtlasText>
           </Box>
         </Box>
-      </SummaryCard>
+      </ContentCard>
 
       {/* Candidate cards */}
       {candidates.map((c) => {
         const isSelected = selectedCandidate === c.name;
         return (
-          <SummaryCard
+          <ContentCard
             key={c.name}
             sx={
               isSelected
@@ -497,25 +507,19 @@ function IdentifyCandidateStep({
             >
               <Box>
                 <Box sx={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                  <Typography
-                    sx={{
-                      fontSize: "15px",
-                      lineHeight: "22px",
-                      fontWeight: weight.semiBold,
-                      color: color.type.default,
-                    }}
-                  >
+                  <TradAtlasText semanticFont={SF.textMdEmphasis} sx={{ color: color.type.default }}>
                     {c.name}
-                  </Typography>
+                  </TradAtlasText>
                   {c.recommended && (
                     <Chip
                       label="Recommended"
                       size="small"
+                      {...{ [DATA_SEMANTIC_FONT]: SF.textMicro }}
                       sx={{
+                        ...semanticFontStyle(SF.textMicro),
                         backgroundColor: color.status.success.background,
                         color: color.status.success.text,
                         fontWeight: weight.semiBold,
-                        fontSize: "11px",
                         height: 20,
                         border: `1px solid ${color.status.success.default}`,
                       }}
@@ -525,26 +529,25 @@ function IdentifyCandidateStep({
                     <Chip
                       label="Selected"
                       size="small"
+                      {...{ [DATA_SEMANTIC_FONT]: SF.textMicro }}
                       sx={{
+                        ...semanticFontStyle(SF.textMicro),
                         backgroundColor: color.action.primary.default,
                         color: "#fff",
                         fontWeight: weight.semiBold,
-                        fontSize: "11px",
                         height: 20,
                       }}
                     />
                   )}
                 </Box>
-                <Typography sx={{ fontSize: "13px", color: color.type.muted, mt: "2px" }}>
+                <TradAtlasText semanticFont={SF.labelMd} sx={{ color: color.type.muted, mt: "2px" }}>
                   {c.title} · {c.company}
-                </Typography>
+                </TradAtlasText>
               </Box>
               <Box sx={{ textAlign: "right" }}>
-                <Typography
+                <TradAtlasText
+                  semanticFont={SF.titleH4Emphasis}
                   sx={{
-                    fontSize: "20px",
-                    lineHeight: "24px",
-                    fontWeight: weight.bold,
                     color:
                       c.match >= 90
                         ? color.status.success.text
@@ -554,8 +557,10 @@ function IdentifyCandidateStep({
                   }}
                 >
                   {c.match}%
-                </Typography>
-                <Typography sx={{ fontSize: "11px", color: color.type.muted }}>match</Typography>
+                </TradAtlasText>
+                <TradAtlasText semanticFont={SF.textMicro} sx={{ color: color.type.muted }}>
+                  match
+                </TradAtlasText>
               </Box>
             </Box>
 
@@ -565,11 +570,10 @@ function IdentifyCandidateStep({
                   flag.toLowerCase().includes("non-resident") ||
                   flag.toLowerCase().includes("may not");
                 return (
-                  <Typography
+                  <TradAtlasText
                     key={flag}
+                    semanticFont={SF.textSmEmphasis}
                     sx={{
-                      fontSize: "12px",
-                      lineHeight: "16px",
                       px: "8px",
                       py: "3px",
                       borderRadius: radius.sm,
@@ -578,293 +582,263 @@ function IdentifyCandidateStep({
                         ? color.status.warning.background
                         : color.surface.subtle,
                       color: isWarning ? color.status.warning.text : color.type.muted,
-                      fontWeight: weight.medium,
                     }}
                   >
                     {flag}
-                  </Typography>
+                  </TradAtlasText>
                 );
               })}
             </Box>
 
             <Box sx={{ mt: "12px" }}>
-              <Box
-                component="button"
+              <Button
                 onClick={() => onSelectCandidate(c.name)}
-                sx={{
-                  px: "14px",
-                  py: "6px",
-                  borderRadius: radius.lg,
-                  border:
-                    c.recommended && !isSelected
-                      ? "none"
-                      : `1px solid ${isSelected ? color.action.primary.default : color.outline.fixed}`,
-                  background: isSelected
-                    ? color.surface.default
+                variant={isSelected ? "outlined" : c.recommended ? "contained" : "outlined"}
+                color={isSelected || c.recommended ? "primary" : "inherit"}
+                size="small"
+                data-atlas-component="Button"
+                {...{ [DATA_SEMANTIC_FONT]: SF.labelMd }}
+                data-atlas-variant={
+                  isSelected
+                    ? "outlined - primary - sm - selected"
                     : c.recommended
-                      ? color.action.primary.default
-                      : color.surface.default,
-                  color: isSelected
-                    ? color.action.primary.default
-                    : c.recommended
-                      ? color.action.primary.onPrimary
-                      : color.type.default,
-                  fontSize: "13px",
-                  fontWeight: weight.semiBold,
-                  cursor: "pointer",
-                  "&:hover": {
-                    background: isSelected
-                      ? color.surface.subtle
-                      : c.recommended
-                        ? color.action.primary.hover
-                        : color.surface.variant,
-                  },
-                }}
+                      ? "contained - primary - sm"
+                      : "outlined - secondary - sm"
+                }
+                sx={
+                  [
+                    semanticFontStyle(SF.labelMd),
+                    {
+                      px: "14px",
+                      py: "6px",
+                      textTransform: "none",
+                      fontWeight: weight.semiBold,
+                      ...(isSelected
+                        ? {}
+                        : c.recommended
+                          ? {}
+                          : {
+                              borderColor: color.outline.fixed,
+                              color: color.type.default,
+                              "&:hover": { background: color.surface.variant },
+                            }),
+                    },
+                  ] as SxProps<Theme>
+                }
               >
                 {isSelected ? "Selected" : c.recommended ? "Select candidate" : "Select"}
-              </Box>
+              </Button>
             </Box>
-          </SummaryCard>
+          </ContentCard>
         );
       })}
     </Box>
   );
 }
 
-/* ── Step 2: Collect appointment data ───────────────────────────── */
+/* ── Step 2: Collect appointment data (full-bleed IDE-style tabs) ── */
 
-function CollectDataStep({ selectedCandidate }: { selectedCandidate: string | null }) {
-  const { color, weight } = useTokens();
-
+function CollectDataStep({
+  steps,
+  selectedCandidate,
+  collectDataTabStatus,
+  appointmentNric,
+  appointmentEffectiveDate,
+  onEntitiesComplete,
+  onConsentComplete,
+  onReplaceConsentDocument,
+}: {
+  steps: WorkflowStep[];
+  selectedCandidate: string | null;
+  collectDataTabStatus: CollectDataTabStatus;
+  appointmentNric: string | null;
+  appointmentEffectiveDate: string | null;
+  onEntitiesComplete: (payload: { nric: string; effectiveDate: string }) => void;
+  onConsentComplete: () => void;
+  onReplaceConsentDocument: (file: File) => void;
+}) {
   return (
-    <Box sx={{ maxWidth: 720, display: "flex", flexDirection: "column", gap: "20px" }}>
-      <StepHeader
-        title="Collect appointment data"
-        subtitle="Confirm the entity, appointee, effective date, and consent to act status for this appointment."
-        statusLabel="NOT STARTED"
-        statusVariant="not_started"
-      />
-
-      <SummaryCard>
-        <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
-          <DetailRow
-            icon={<BusinessOutlinedIcon sx={{ fontSize: 16 }} />}
-            label="Company"
-            value="Pacific Polymer Logistics Pte. Ltd."
-          />
-          <DetailRow
-            icon={<PersonOutlinedIcon sx={{ fontSize: 16 }} />}
-            label="Appointee"
-            value={selectedCandidate ?? "Pending — select a candidate first"}
-            muted={!selectedCandidate}
-          />
-          <DetailRow
-            icon={<EventOutlinedIcon sx={{ fontSize: 16 }} />}
-            label="Effective date"
-            value="To be confirmed"
-            muted
-          />
-          <DetailRow
-            icon={<GavelOutlinedIcon sx={{ fontSize: 16 }} />}
-            label="Consent to act"
-            value="Pending"
-            muted
-          />
-        </Box>
-      </SummaryCard>
-
-      <SummaryCard>
-        <Typography
-          sx={{
-            fontSize: "14px",
-            lineHeight: "20px",
-            fontWeight: weight.semiBold,
-            color: color.type.default,
-            mb: "8px",
-          }}
-        >
-          What happens at this step
-        </Typography>
-        <Box sx={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-          {[
-            "Confirm the company and appointee selections",
-            "Set the effective date for the appointment",
-            "Confirm whether a Consent to Act form is on file for the appointee",
-            "Data will be used to generate the board resolution and regulatory filings",
-          ].map((item) => (
-            <Box key={item} sx={{ display: "flex", alignItems: "flex-start", gap: "8px" }}>
-              <Box
-                sx={{
-                  width: 6,
-                  height: 6,
-                  borderRadius: "50%",
-                  background: color.type.muted,
-                  flexShrink: 0,
-                  mt: "7px",
-                }}
-              />
-              <Typography sx={{ fontSize: "13px", lineHeight: "20px", color: color.type.muted }}>
-                {item}
-              </Typography>
-            </Box>
-          ))}
-        </Box>
-      </SummaryCard>
-    </Box>
-  );
-}
-
-/* ── Step 3: Configure approvers ────────────────────────────────── */
-
-function ConfigureApproversStep() {
-  const { color, weight } = useTokens();
-
-  return (
-    <Box sx={{ maxWidth: 720, display: "flex", flexDirection: "column", gap: "20px" }}>
-      <StepHeader
-        title="Configure approvers"
-        subtitle="Select a board committee and choose which members will approve this appointment."
-        statusLabel="NOT STARTED"
-        statusVariant="not_started"
-      />
-
-      <SummaryCard>
-        <Typography
-          sx={{
-            fontSize: "14px",
-            lineHeight: "20px",
-            fontWeight: weight.semiBold,
-            color: color.type.default,
-            mb: "8px",
-          }}
-        >
-          What happens at this step
-        </Typography>
-        <Box sx={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-          {[
-            "Select one of four committees: Nomination, Audit, Compensation, or Governance",
-            "Choose which committee members will approve the appointment",
-            "Members with missing signature templates will be disabled",
-            "Documents (Board Resolution, Form 45) are auto-generated after confirmation",
-          ].map((item) => (
-            <Box key={item} sx={{ display: "flex", alignItems: "flex-start", gap: "8px" }}>
-              <Box
-                sx={{
-                  width: 6,
-                  height: 6,
-                  borderRadius: "50%",
-                  background: color.type.muted,
-                  flexShrink: 0,
-                  mt: "7px",
-                }}
-              />
-              <Typography sx={{ fontSize: "13px", lineHeight: "20px", color: color.type.muted }}>
-                {item}
-              </Typography>
-            </Box>
-          ))}
-        </Box>
-      </SummaryCard>
-    </Box>
+    <CollectAppointmentDataTabs
+      steps={steps}
+      selectedCandidate={selectedCandidate}
+      entitiesComplete={collectDataTabStatus.entities}
+      consentComplete={collectDataTabStatus.consent}
+      appointmentNric={appointmentNric}
+      appointmentEffectiveDate={appointmentEffectiveDate}
+      onEntitiesComplete={onEntitiesComplete}
+      onConsentComplete={onConsentComplete}
+      onReplaceConsentDocument={onReplaceConsentDocument}
+    />
   );
 }
 
 /* ── Step 4: Board approval ─────────────────────────────────────── */
 
-function BoardApprovalStep() {
+function BoardApprovalStep({ agenticState }: { agenticState: AgenticProcessState }) {
   const { color, weight } = useTokens();
+
+  const approvedCount = agenticState.votes.filter((v) => v.status === "approved").length;
+  const totalVotes = agenticState.votes.length;
+  const allApproved = approvedCount === totalVotes;
 
   return (
     <Box sx={{ maxWidth: 720, display: "flex", flexDirection: "column", gap: "20px" }}>
-      <StepHeader
+      <SectionHeader
         title="Board approval"
-        subtitle="The board resolution is sent to selected approvers for electronic signature. Progress is tracked in real time."
-        statusLabel="NOT STARTED"
-        statusVariant="not_started"
+        subtitle="The board resolution has been sent to selected approvers for electronic signature. Progress is tracked in real time."
+        statusLabel={allApproved ? "COMPLETE" : "IN PROGRESS"}
+        statusVariant={allApproved ? "completed" : "in_progress"}
       />
 
-      <SummaryCard>
-        <Box sx={{ display: "flex", alignItems: "flex-start", gap: "12px" }}>
-          <HowToVoteOutlinedIcon
-            sx={{ fontSize: 18, color: color.type.muted, mt: "2px" }}
-          />
-          <Box>
-            <Typography
+      {/* Progress bar */}
+      <ContentCard>
+        <Box sx={{ display: "flex", alignItems: "center", gap: "12px", mb: "16px" }}>
+          <HowToVoteOutlinedIcon sx={{ fontSize: 18, color: allApproved ? color.status.success.default : color.action.primary.default }} />
+          <TradAtlasText semanticFont={SF.textMdEmphasis} sx={{ color: color.type.default }}>
+            {allApproved
+              ? "All approvals received — resolution is signed"
+              : `${approvedCount} of ${totalVotes} approvals received`}
+          </TradAtlasText>
+        </Box>
+        <LinearProgress
+          variant="determinate"
+          value={(approvedCount / totalVotes) * 100}
+          sx={{
+            height: 6,
+            borderRadius: 3,
+            mb: "20px",
+            backgroundColor: color.outline.fixed,
+            "& .MuiLinearProgress-bar": {
+              backgroundColor: allApproved ? color.status.success.default : color.action.primary.default,
+              borderRadius: 3,
+              transition: "transform 0.6s ease",
+            },
+          }}
+        />
+
+        {/* Voter rows */}
+        <Box sx={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+          {agenticState.votes.map((v) => (
+            <Box
+              key={v.id}
               sx={{
-                fontSize: "14px",
-                lineHeight: "22px",
-                color: color.type.default,
-                fontWeight: weight.semiBold,
-                mb: "4px",
+                display: "flex",
+                alignItems: "center",
+                gap: "12px",
+                py: "10px",
+                px: "4px",
+                borderBottom: `1px solid ${color.outline.fixed}`,
+                "&:last-child": { borderBottom: "none" },
               }}
             >
-              Automated approval process
-            </Typography>
-            <Typography sx={{ fontSize: "13px", lineHeight: "20px", color: color.type.muted }}>
-              Once started, the system sends the Board Resolution to each selected approver and
-              collects their votes. A running tally tracks progress (e.g. "2/4 Approved"). When all
-              approvers respond, the resolution is marked as signed and documents become available
-              for filing.
-            </Typography>
-          </Box>
+              {v.status === "approved" ? (
+                <CheckCircleIcon sx={{ fontSize: 20, color: color.status.success.default, flexShrink: 0 }} />
+              ) : (
+                <CircularProgress size={18} thickness={5} sx={{ color: color.outline.fixed, flexShrink: 0, ml: "1px", mr: "1px" }} />
+              )}
+              <Box sx={{ flex: 1, minWidth: 0 }}>
+                <TradAtlasText semanticFont={SF.labelMd} sx={{ color: color.type.default }}>
+                  {v.name}
+                </TradAtlasText>
+                <TradAtlasText semanticFont={SF.textSm} sx={{ color: color.type.muted }}>
+                  {v.title}
+                </TradAtlasText>
+              </Box>
+              {v.status === "approved" ? (
+                <Box sx={{ display: "flex", alignItems: "center", gap: "8px", flexShrink: 0 }}>
+                  <Chip
+                    label="Approved"
+                    size="small"
+                    sx={{
+                      ...semanticFontStyle(SF.textXs),
+                      height: 20,
+                      backgroundColor: color.status.success.background,
+                      color: color.status.success.text,
+                      fontWeight: weight.semiBold,
+                      border: `1px solid ${color.status.success.default}`,
+                    }}
+                  />
+                  <TradAtlasText semanticFont={SF.textMicro} sx={{ color: color.type.muted }}>
+                    {v.time}
+                  </TradAtlasText>
+                </Box>
+              ) : (
+                <Chip
+                  label="Awaiting"
+                  size="small"
+                  sx={{
+                    ...semanticFontStyle(SF.textXs),
+                    height: 20,
+                    backgroundColor: color.surface.subtle,
+                    color: color.type.muted,
+                    fontWeight: weight.medium,
+                  }}
+                />
+              )}
+            </Box>
+          ))}
         </Box>
-      </SummaryCard>
+      </ContentCard>
+
+      {allApproved && (
+        <ContentCard>
+          <Box sx={{ display: "flex", alignItems: "flex-start", gap: "12px" }}>
+            <CheckCircleOutlineIcon sx={{ fontSize: 18, color: color.status.success.default, mt: "2px" }} />
+            <Box>
+              <TradAtlasText semanticFont={SF.textMd} sx={{ color: color.type.default, fontWeight: weight.semiBold, mb: "4px" }}>
+                Resolution signed
+              </TradAtlasText>
+              <TradAtlasText semanticFont={SF.labelMd} sx={{ color: color.type.muted }}>
+                All {totalVotes} board members have approved the Board Resolution for the appointment of
+                Priya Nair as director of Pacific Polymer Logistics Pte. Ltd. The signed document is now
+                available for regulatory filing.
+              </TradAtlasText>
+            </Box>
+          </Box>
+        </ContentCard>
+      )}
     </Box>
   );
 }
 
 /* ── Step 5: Regulatory filing ──────────────────────────────────── */
 
-function RegulatoryFilingStep() {
+function RegulatoryFilingStep({ agenticState }: { agenticState: AgenticProcessState }) {
   const { color, weight } = useTokens();
+
+  const completedCount = agenticState.filingSubsteps.filter((s) => s.status === "completed").length;
+  const allDone = completedCount === agenticState.filingSubsteps.length;
 
   return (
     <Box sx={{ maxWidth: 720, display: "flex", flexDirection: "column", gap: "20px" }}>
-      <StepHeader
+      <SectionHeader
         title="Regulatory filing"
-        subtitle="Download signed documents and file them with ACRA. This step requires manual confirmation."
-        statusLabel="NOT STARTED"
-        statusVariant="not_started"
+        subtitle="The system is automatically preparing and filing documents with ACRA on behalf of Pacific Polymer Logistics Pte. Ltd."
+        statusLabel={allDone ? "COMPLETE" : "IN PROGRESS"}
+        statusVariant={allDone ? "completed" : "in_progress"}
       />
 
-      <SummaryCard>
-        <Box sx={{ display: "flex", alignItems: "flex-start", gap: "12px" }}>
-          <UploadFileOutlinedIcon
-            sx={{ fontSize: 18, color: color.type.muted, mt: "2px" }}
-          />
-          <Box>
-            <Typography
-              sx={{
-                fontSize: "14px",
-                lineHeight: "22px",
-                color: color.type.default,
-                fontWeight: weight.semiBold,
-                mb: "4px",
-              }}
-            >
-              Manual filing with ACRA
-            </Typography>
-            <Typography sx={{ fontSize: "13px", lineHeight: "20px", color: color.type.muted }}>
-              After the board resolution is signed, you will need to download the signed Board
-              Resolution and Form 45 — Notification of Change of Director. File these documents with
-              ACRA via their e-Filing system. Once complete, confirm the filing here to proceed.
-            </Typography>
-          </Box>
+      <ContentCard>
+        <Box sx={{ display: "flex", alignItems: "center", gap: "12px", mb: "16px" }}>
+          <UploadFileOutlinedIcon sx={{ fontSize: 18, color: allDone ? color.status.success.default : color.action.primary.default }} />
+          <TradAtlasText semanticFont={SF.textMdEmphasis} sx={{ color: color.type.default }}>
+            {allDone
+              ? "Filing complete — all documents submitted to ACRA"
+              : `${completedCount} of ${agenticState.filingSubsteps.length} filing tasks complete`}
+          </TradAtlasText>
         </Box>
-      </SummaryCard>
 
-      <SummaryCard>
-        <Typography
-          sx={{
-            fontSize: "14px",
-            lineHeight: "20px",
-            fontWeight: weight.semiBold,
-            color: color.type.default,
-            mb: "8px",
-          }}
-        >
-          Documents required
-        </Typography>
+        <Box sx={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+          {agenticState.filingSubsteps.map((sub) => (
+            <StatusSubstepRow key={sub.name} status={sub.status} label={sub.name} time={sub.time} />
+          ))}
+        </Box>
+      </ContentCard>
+
+      <ContentCard>
+        <TradAtlasText semanticFont={SF.textMd} sx={{ fontWeight: weight.semiBold, color: color.type.default, mb: "8px" }}>
+          Documents filed
+        </TradAtlasText>
         <Box sx={{ display: "flex", flexDirection: "column", gap: "6px" }}>
           {[
             "Board Resolution (Signed) — Board_Resolution_PacificPolymer.pdf",
@@ -872,23 +846,27 @@ function RegulatoryFilingStep() {
             "Form 45 — Notification of Change of Director — Form_45_PacificPolymer.pdf",
           ].map((doc) => (
             <Box key={doc} sx={{ display: "flex", alignItems: "flex-start", gap: "8px" }}>
-              <Box
-                sx={{
-                  width: 6,
-                  height: 6,
-                  borderRadius: "50%",
-                  background: color.type.muted,
-                  flexShrink: 0,
-                  mt: "7px",
-                }}
-              />
-              <Typography sx={{ fontSize: "13px", lineHeight: "20px", color: color.type.muted }}>
+              {allDone ? (
+                <CheckCircleIcon sx={{ fontSize: 14, color: color.status.success.default, flexShrink: 0, mt: "3px" }} />
+              ) : (
+                <Box
+                  sx={{
+                    width: 6,
+                    height: 6,
+                    borderRadius: "50%",
+                    background: color.type.muted,
+                    flexShrink: 0,
+                    mt: "7px",
+                  }}
+                />
+              )}
+              <TradAtlasText semanticFont={SF.labelMd} sx={{ color: color.type.muted }}>
                 {doc}
-              </Typography>
+              </TradAtlasText>
             </Box>
           ))}
         </Box>
-      </SummaryCard>
+      </ContentCard>
     </Box>
   );
 }
@@ -897,47 +875,61 @@ function RegulatoryFilingStep() {
 
 function UpdateEntitiesStep({
   selectedCandidate,
+  agenticState,
 }: {
   selectedCandidate: string | null;
+  agenticState: AgenticProcessState;
 }) {
   const { color, weight } = useTokens();
 
+  const completedCount = agenticState.entitySubsteps.filter((s) => s.status === "completed").length;
+  const allDone = completedCount === agenticState.entitySubsteps.length;
+
   return (
     <Box sx={{ maxWidth: 720, display: "flex", flexDirection: "column", gap: "20px" }}>
-      <StepHeader
+      <SectionHeader
         title="Update entity records"
-        subtitle="Automatically record the resignation and new appointment in the entity management system."
-        statusLabel="NOT STARTED"
-        statusVariant="not_started"
+        subtitle="The system is automatically recording the resignation and new appointment in the entity management system."
+        statusLabel={allDone ? "COMPLETE" : "IN PROGRESS"}
+        statusVariant={allDone ? "completed" : "in_progress"}
       />
 
-      <SummaryCard>
-        <Box sx={{ display: "flex", alignItems: "flex-start", gap: "12px" }}>
-          <StorageOutlinedIcon
-            sx={{ fontSize: 18, color: color.type.muted, mt: "2px" }}
-          />
-          <Box>
-            <Typography
-              sx={{
-                fontSize: "14px",
-                lineHeight: "22px",
-                color: color.type.default,
-                fontWeight: weight.semiBold,
-                mb: "4px",
-              }}
-            >
-              Automated entity updates
-            </Typography>
-            <Typography sx={{ fontSize: "13px", lineHeight: "20px", color: color.type.muted }}>
-              After filing is confirmed, the system will automatically update Pacific Polymer
-              Logistics Pte. Ltd.'s entity records. First, it will record David Chen's resignation.
-              Then it will record{" "}
-              {selectedCandidate ? `${selectedCandidate}'s` : "the new appointee's"} appointment as
-              director. Each substep shows a timestamp when completed.
-            </Typography>
-          </Box>
+      <ContentCard>
+        <Box sx={{ display: "flex", alignItems: "center", gap: "12px", mb: "16px" }}>
+          <StorageOutlinedIcon sx={{ fontSize: 18, color: allDone ? color.status.success.default : color.action.primary.default }} />
+          <TradAtlasText semanticFont={SF.textMdEmphasis} sx={{ color: color.type.default }}>
+            {allDone
+              ? "Entity records updated — workflow complete"
+              : `${completedCount} of ${agenticState.entitySubsteps.length} records updated`}
+          </TradAtlasText>
         </Box>
-      </SummaryCard>
+
+        <Box sx={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+          {agenticState.entitySubsteps.map((sub) => (
+            <StatusSubstepRow key={sub.name} status={sub.status} label={sub.name} time={sub.time} />
+          ))}
+        </Box>
+      </ContentCard>
+
+      {allDone && (
+        <ContentCard sx={{ border: `1px solid ${color.status.success.default}`, background: color.status.success.background }}>
+          <Box sx={{ display: "flex", alignItems: "flex-start", gap: "12px" }}>
+            <CheckCircleOutlineIcon sx={{ fontSize: 20, color: color.status.success.default, mt: "2px" }} />
+            <Box>
+              <TradAtlasText semanticFont={SF.textMd} sx={{ color: color.type.default, fontWeight: weight.semiBold, mb: "4px" }}>
+                Appointment workflow complete
+              </TradAtlasText>
+              <TradAtlasText semanticFont={SF.labelMd} sx={{ color: color.type.muted }}>
+                David Chen's resignation has been recorded and{" "}
+                {selectedCandidate ? `${selectedCandidate}` : "the new appointee"} has been appointed as
+                director of Pacific Polymer Logistics Pte. Ltd. All regulatory filings have been
+                submitted to ACRA, entity records are updated, and the board resolution has been signed
+                by all approvers.
+              </TradAtlasText>
+            </Box>
+          </Box>
+        </ContentCard>
+      )}
     </Box>
   );
 }

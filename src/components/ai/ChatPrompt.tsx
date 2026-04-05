@@ -1,12 +1,10 @@
 import { useRef } from "react";
 import { Box, InputBase } from "@mui/material";
-import AttachFileIcon from "@mui/icons-material/AttachFile";
-import TuneIcon from "@mui/icons-material/Tune";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import MicIcon from "@mui/icons-material/Mic";
-import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
+import { AttachFileIcon, ArrowUpwardIcon, ExpandMoreIcon, MicIcon, TuneIcon } from "@/icons";
+import { DATA_SEMANTIC_FONT, SF, semanticFontStyle } from "@/tokens/tradAtlasSemanticTypography";
 import { TertiaryButton, TertiaryIconButton } from "../common";
 import { useTokens } from "../../hooks/useTokens";
+import type { ChatPresentationDensity } from "./chatPresentation";
 
 interface ChatPromptProps {
   value: string;
@@ -16,6 +14,10 @@ interface ChatPromptProps {
   canSend?: boolean;
   placeholder?: string;
   maxWidth?: number;
+  /** When true, prompt stretches to the full width of its container. */
+  fullWidth?: boolean;
+  /** `compact` — attach + send only (workspace rail). `relaxed` — full toolbar (general chat). */
+  density?: ChatPresentationDensity;
 }
 
 export default function ChatPrompt({
@@ -26,6 +28,8 @@ export default function ChatPrompt({
   canSend = false,
   placeholder = "Ask anything...",
   maxWidth = 640,
+  fullWidth = false,
+  density = "relaxed",
 }: ChatPromptProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const { color, radius, isDark } = useTokens();
@@ -39,9 +43,19 @@ export default function ChatPrompt({
 
   const shadowColor = isDark ? "rgba(0, 0, 0, 0.3)" : "rgba(36, 38, 40, 0.07)";
 
+  const isCompact = density === "compact";
+
   return (
-    <Box sx={{ maxWidth, width: "100%", borderRadius: radius.lg }}>
+    <Box
+      sx={{
+        maxWidth: fullWidth ? "100%" : maxWidth,
+        width: "100%",
+        borderRadius: radius.lg,
+      }}
+    >
       <Box
+        data-atlas-component="ChatPrompt"
+        data-atlas-variant={isCompact ? "input - composite - compact" : "input - composite - relaxed"}
         sx={{
           border: `1px solid ${color.outline.default}`,
           borderRadius: radius.lg,
@@ -62,11 +76,10 @@ export default function ChatPrompt({
           multiline
           maxRows={6}
           disabled={disabled}
+          {...{ [DATA_SEMANTIC_FONT]: SF.textLg }}
           sx={{
+            ...semanticFontStyle(SF.textLg),
             width: "100%",
-            fontSize: "16px",
-            lineHeight: "24px",
-            letterSpacing: "0.2px",
             color: color.type.default,
             py: "8px",
             px: "12px",
@@ -77,22 +90,26 @@ export default function ChatPrompt({
           }}
         />
         <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <Box sx={{ display: "flex", alignItems: "center", gap: "16px" }}>
+          <Box sx={{ display: "flex", alignItems: "center", gap: isCompact ? "8px" : "16px" }}>
             <TertiaryIconButton ariaLabel="Attach file" disabled={disabled}>
-              <AttachFileIcon sx={{ fontSize: 24 }} />
+              <AttachFileIcon sx={{ fontSize: isCompact ? 22 : 24 }} />
             </TertiaryIconButton>
-            <TertiaryButton
-              label="Tools"
-              leadingIcon={<TuneIcon sx={{ fontSize: 24, color: color.action.secondary.onSecondary }} />}
-              trailingIcon={<ExpandMoreIcon sx={{ fontSize: 24, color: color.action.secondary.onSecondary }} />}
-            />
+            {!isCompact ? (
+              <TertiaryButton
+                label="Tools"
+                leadingIcon={<TuneIcon sx={{ fontSize: 24, color: color.action.secondary.onSecondary }} />}
+                trailingIcon={<ExpandMoreIcon sx={{ fontSize: 24, color: color.action.secondary.onSecondary }} />}
+              />
+            ) : null}
           </Box>
-          <Box sx={{ display: "flex", alignItems: "center", gap: "16px" }}>
-            <TertiaryIconButton ariaLabel="Voice input" disabled={disabled}>
-              <MicIcon sx={{ fontSize: 24 }} />
-            </TertiaryIconButton>
+          <Box sx={{ display: "flex", alignItems: "center", gap: isCompact ? "8px" : "16px" }}>
+            {!isCompact ? (
+              <TertiaryIconButton ariaLabel="Voice input" disabled={disabled}>
+                <MicIcon sx={{ fontSize: 24 }} />
+              </TertiaryIconButton>
+            ) : null}
             <TertiaryIconButton ariaLabel="Send message" disabled={!canSend} onClick={onSend}>
-              <ArrowUpwardIcon sx={{ fontSize: 24 }} />
+              <ArrowUpwardIcon sx={{ fontSize: isCompact ? 22 : 24 }} />
             </TertiaryIconButton>
           </Box>
         </Box>
