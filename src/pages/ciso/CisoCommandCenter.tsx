@@ -948,7 +948,7 @@ function RecentActivity() {
   ];
 
   return (
-    <ContentCard sx={{ flex: 1 }}>
+    <ContentCard sx={{ flex: 1, height: "100%", minHeight: 0 }}>
       <TradAtlasText semanticFont={SF.titleH4Emphasis} sx={{ fontWeight: weight.semiBold, color: color.type.default, mb: "16px" }}>
         Recent activity
       </TradAtlasText>
@@ -1011,11 +1011,18 @@ function SystemLog() {
   ];
 
   return (
-    <ContentCard>
-      <TradAtlasText semanticFont={SF.textMd} sx={{ fontWeight: weight.semiBold, color: color.type.default, mb: "4px" }}>
+    <ContentCard
+      sx={{
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        minHeight: 0,
+      }}
+    >
+      <TradAtlasText semanticFont={SF.textMd} sx={{ fontWeight: weight.semiBold, color: color.type.default, mb: "4px", flexShrink: 0 }}>
         System log
       </TradAtlasText>
-      <TradAtlasText semanticFont={SF.textSm} sx={{ color: color.type.muted, mb: "12px" }}>
+      <TradAtlasText semanticFont={SF.textSm} sx={{ color: color.type.muted, mb: "12px", flexShrink: 0 }}>
         Recent agent activity (last 24 hours)
       </TradAtlasText>
       <Box
@@ -1027,7 +1034,8 @@ function SystemLog() {
           display: "flex",
           flexDirection: "column",
           gap: "8px",
-          maxHeight: 200,
+          flex: 1,
+          minHeight: 0,
           overflow: "auto",
         }}
       >
@@ -1077,8 +1085,8 @@ export default function CisoCommandCenter() {
           }}
         >
           <HeroBanner />
-          <SecurityPosture />
           <ChatSection />
+          <SecurityPosture />
           <VulnerabilitySummary />
           <AgentActivity />
           <ProactiveTasks />
@@ -1089,6 +1097,7 @@ export default function CisoCommandCenter() {
               display: "grid",
               gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },
               gap: "24px",
+              alignItems: "stretch",
             }}
           >
             <RecentActivity />

@@ -3,26 +3,31 @@ import {
   Box,
   Button,
   Chip,
-  LinearProgress,
-  IconButton,
   Divider,
+  IconButton,
+  LinearProgress,
+  Menu,
+  MenuItem,
+  Stack,
 } from "@mui/material";
-import { Link as RouterLink } from "react-router";
+import { Link, Link as RouterLink } from "react-router";
 import {
-  WarningAmberIcon,
-  BoltOutlinedIcon,
   CheckCircleOutlineIcon,
-  GroupsOutlinedIcon,
-  BusinessOutlinedIcon,
-  GavelOutlinedIcon,
-  DescriptionOutlinedIcon,
-  EventOutlinedIcon,
+  FactCheckOutlinedIcon,
+  AssessmentOutlinedIcon,
+  SearchOutlinedIcon,
+  BuildOutlinedIcon,
   TrendingUpOutlinedIcon,
   TrendingDownOutlinedIcon,
   AutoAwesomeOutlinedIcon,
-  AccountTreeOutlinedIcon,
   MoreHorizIcon,
-  DomainOutlinedIcon,
+  AppsIcon,
+  HelpOutlineIcon,
+  SettingsOutlinedIcon,
+  AccountCircleOutlinedIcon,
+  TaskAltOutlinedIcon,
+  AccountTreeOutlinedIcon,
+  SummarizeOutlinedIcon,
 } from "@/icons";
 import TradAtlasText from "@/components/common/TradAtlasText";
 import { DATA_SEMANTIC_FONT, SF, semanticFontStyle } from "@/tokens/tradAtlasSemanticTypography";
@@ -31,8 +36,127 @@ import { useDemo } from "../../DemoContext";
 import { useTokens } from "../../hooks/useTokens";
 import { ChatPrompt } from "../../components/ai";
 import ContentCard from "@/components/common/ContentCard";
-import GlobalHeader from "./GlobalHeader";
-import DemoControlsFab from "./DemoControlsFab";
+import DemoControlsFab from "../corpsec/DemoControlsFab";
+
+/* ─── GlobalHeader (Audit variant) ─────────────────────────────────────────── */
+
+function GlobalHeader() {
+  const { color, radius, weight } = useTokens();
+  const [appMenuAnchor, setAppMenuAnchor] = useState<HTMLElement | null>(null);
+
+  return (
+    <Box
+      sx={{
+        height: 56,
+        px: "16px",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        borderBottom: `1px solid ${color.outline.fixed}`,
+        background: color.surface.default,
+        flexShrink: 0,
+      }}
+    >
+      <Stack direction="row" alignItems="center" spacing={1.5}>
+        <Link to="/" style={{ textDecoration: "none", display: "flex", alignItems: "center" }}>
+          <Box
+            {...{ [DATA_SEMANTIC_FONT]: SF.textMdEmphasis }}
+            sx={{
+              width: 32,
+              height: 32,
+              borderRadius: radius.sm,
+              background: "#16a34a",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: "#fff",
+              ...semanticFontStyle(SF.textMdEmphasis),
+              fontWeight: weight.bold,
+              boxShadow: "0 1px 3px rgba(0,0,0,0.12)",
+            }}
+          >
+            A
+          </Box>
+        </Link>
+
+        <Divider orientation="vertical" flexItem sx={{ borderColor: color.outline.fixed }} />
+
+        <TradAtlasText semanticFont={SF.textMdEmphasis} sx={{ color: color.type.default }}>
+          Acme Co, Inc.
+        </TradAtlasText>
+
+        <Divider orientation="vertical" flexItem sx={{ borderColor: color.outline.fixed }} />
+
+        <IconButton
+          onClick={(e) => setAppMenuAnchor(e.currentTarget)}
+          sx={{ color: color.type.default }}
+          size="small"
+        >
+          <AppsIcon fontSize="small" />
+        </IconButton>
+
+        <Menu
+          anchorEl={appMenuAnchor}
+          open={Boolean(appMenuAnchor)}
+          onClose={() => setAppMenuAnchor(null)}
+          anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
+          transformOrigin={{ vertical: "top", horizontal: "left" }}
+          slotProps={{
+            paper: {
+              sx: {
+                background: color.surface.default,
+                border: `1px solid ${color.outline.fixed}`,
+                borderRadius: radius.md,
+              },
+            },
+          }}
+        >
+          <MenuItem onClick={() => setAppMenuAnchor(null)}>
+            <TradAtlasText semanticFont={SF.textMd} sx={{ color: color.type.muted }}>
+              Corporate secretary
+            </TradAtlasText>
+          </MenuItem>
+          <MenuItem onClick={() => setAppMenuAnchor(null)}>
+            <TradAtlasText semanticFont={SF.textMd} sx={{ color: color.type.muted }}>
+              CISO / IT Risk
+            </TradAtlasText>
+          </MenuItem>
+          <MenuItem sx={{ gap: "8px" }}>
+            <TradAtlasText semanticFont={SF.textMdEmphasis} sx={{ color: color.type.default }}>
+              Internal audit
+            </TradAtlasText>
+            <TradAtlasText semanticFont={SF.textMicroEmphasis} sx={{ color: color.action.primary.default }}>
+              Current
+            </TradAtlasText>
+          </MenuItem>
+          <MenuItem onClick={() => setAppMenuAnchor(null)}>
+            <TradAtlasText semanticFont={SF.textMd} sx={{ color: color.type.muted }}>
+              Compliance
+            </TradAtlasText>
+          </MenuItem>
+        </Menu>
+
+        <TradAtlasText semanticFont={SF.textMd} sx={{ color: color.type.muted, fontWeight: weight.medium }}>
+          Internal Audit Command Center
+        </TradAtlasText>
+      </Stack>
+
+      <Stack direction="row" alignItems="center" spacing={0.5}>
+        <IconButton size="small" sx={{ color: color.type.muted }}>
+          <HelpOutlineIcon fontSize="small" />
+        </IconButton>
+        <IconButton size="small" sx={{ color: color.type.muted }}>
+          <SettingsOutlinedIcon fontSize="small" />
+        </IconButton>
+        <IconButton size="small" sx={{ color: color.type.muted }}>
+          <AccountCircleOutlinedIcon fontSize="small" />
+        </IconButton>
+      </Stack>
+    </Box>
+  );
+}
+
+/* ─── IncidentTile ─────────────────────────────────────────────────────────── */
 
 function IncidentTile({
   icon,
@@ -138,36 +262,24 @@ function IncidentTile({
   );
 }
 
+/* ─── HeroBanner ───────────────────────────────────────────────────────────── */
+
 function HeroBanner() {
   const { hasAlerts } = useDemo();
   const { color, radius, weight } = useTokens();
 
   if (hasAlerts) {
     return (
-      <Box
-        sx={{
-          display: "flex",
-          gap: "16px",
-          flexDirection: { xs: "column", md: "row" },
-        }}
-      >
+      <Box sx={{ display: "flex", gap: "16px", flexDirection: { xs: "column", md: "row" } }}>
         <IncidentTile
-          icon={<WarningAmberIcon sx={{ color: color.status.error.default, fontSize: 22 }} />}
-          title="Subsidiary director resignation"
-          severity="CRITICAL"
-          severityVariant="critical"
-          subtitle="Workday alert — David Chen has resigned from Pacific Polymer Logistics Pte. Ltd. (Singapore). Last day in 14 days."
-          stats="ACRA filing required · Replacement needed · Board approval required"
-          actionLabel="Investigate"
-          actionHref="/corpsec/appointment"
-        />
-        <IncidentTile
-          icon={<BoltOutlinedIcon sx={{ color: color.status.warning.text, fontSize: 22 }} />}
-          title="Filing compliance gap"
-          severity="HIGH"
+          icon={<FactCheckOutlinedIcon sx={{ color: color.action.primary.default, fontSize: 22 }} />}
+          title="Stakeholder assurance report request"
+          severity="ACTION"
           severityVariant="high"
-          subtitle="Zenith Compliance Services (Ireland) annual return past due"
-          stats="2 days overdue    Penalty risk    CRO filing"
+          subtitle="Thomas Chen asked you to assess cybersecurity control posture and SEC disclosure readiness before Thursday's Audit Committee meeting."
+          stats="Requested by Thomas Chen · Audit Committee · Thursday"
+          actionLabel="Review"
+          actionHref="/audit"
         />
       </Box>
     );
@@ -193,22 +305,23 @@ function HeroBanner() {
         All clear
       </TradAtlasText>
       <TradAtlasText semanticFont={SF.textMd} sx={{ color: color.type.muted, maxWidth: 560 }}>
-        All 47 entities in good standing, 3 filings due this month (all prepared), and 2 KYC requests in progress.
+        All 24 planned audits on track, no overdue remediation items, and the audit committee pack for Q2 is on schedule.
       </TradAtlasText>
     </Box>
   );
 }
 
+/* ─── AuditPosture ─────────────────────────────────────────────────────────── */
 
-function EntityPortfolio() {
+function AuditPosture() {
   const { color, weight, radius } = useTokens();
 
   const stats = [
-    { value: "47", label: "Total entities", valueColor: color.action.primary.default },
-    { value: "12", label: "Jurisdictions", valueColor: color.action.primary.default },
-    { value: "3", label: "Filings due", valueColor: color.status.success.text },
-    { value: "47", label: "Good standing", valueColor: color.status.success.text },
-    { value: "2", label: "Updates needed", valueColor: color.status.error.text },
+    { value: "24", label: "Planned audits", valueColor: color.action.primary.default },
+    { value: "18", label: "Completed", valueColor: color.status.success.text },
+    { value: "42", label: "Open issues", valueColor: color.status.warning.text },
+    { value: "87%", label: "Remediation rate", valueColor: color.status.success.text },
+    { value: "6", label: "Overdue items", valueColor: color.status.error.text },
   ];
 
   return (
@@ -226,14 +339,14 @@ function EntityPortfolio() {
             color: color.action.primary.default,
           }}
         >
-          <DomainOutlinedIcon sx={{ fontSize: 20 }} />
+          <FactCheckOutlinedIcon sx={{ fontSize: 20 }} />
         </Box>
         <Box>
           <TradAtlasText semanticFont={SF.textMdEmphasis} sx={{ color: color.type.default }}>
-            Entity portfolio at a glance
+            Audit program at a glance
           </TradAtlasText>
           <TradAtlasText semanticFont={SF.labelMdCompact} sx={{ color: color.type.muted }}>
-            Your corporate structure summary
+            FY 2026 audit plan and issue summary
           </TradAtlasText>
         </Box>
       </Box>
@@ -263,40 +376,42 @@ function EntityPortfolio() {
   );
 }
 
+/* ─── ChatSection ──────────────────────────────────────────────────────────── */
+
 function ChatSection() {
   const [input, setInput] = useState("");
   const { color, weight } = useTokens();
 
   const suggestions = [
     {
-      label: "Start board appointment workflow",
-      description: "Appoint a subsidiary director end to end",
-      icon: <GroupsOutlinedIcon sx={{ fontSize: 20 }} />,
+      label: "Start control assessment",
+      description: "Test controls against frameworks",
+      icon: <FactCheckOutlinedIcon sx={{ fontSize: 20 }} />,
     },
     {
-      label: "Draft board briefing",
-      description: "Board and committee meeting summaries",
-      icon: <DescriptionOutlinedIcon sx={{ fontSize: 20 }} />,
+      label: "Draft committee report",
+      description: "Audit committee pack preparation",
+      icon: <SummarizeOutlinedIcon sx={{ fontSize: 20 }} />,
     },
     {
-      label: "Run entity compliance check",
-      description: "Filings, licenses, and director requirements",
-      icon: <BusinessOutlinedIcon sx={{ fontSize: 20 }} />,
+      label: "Run risk coverage analysis",
+      description: "Map audits to enterprise risks",
+      icon: <AssessmentOutlinedIcon sx={{ fontSize: 20 }} />,
     },
     {
-      label: "Prepare board pack",
-      description: "Assemble and review meeting materials",
+      label: "Search audit workpapers",
+      description: "Evidence and documentation lookup",
+      icon: <SearchOutlinedIcon sx={{ fontSize: 20 }} />,
+    },
+    {
+      label: "Track remediation status",
+      description: "Issue resolution and validation",
+      icon: <BuildOutlinedIcon sx={{ fontSize: 20 }} />,
+    },
+    {
+      label: "Generate assurance map",
+      description: "Lines of defense coverage view",
       icon: <AccountTreeOutlinedIcon sx={{ fontSize: 20 }} />,
-    },
-    {
-      label: "Review governance policies",
-      description: "Policy refresh and gap analysis",
-      icon: <GavelOutlinedIcon sx={{ fontSize: 20 }} />,
-    },
-    {
-      label: "Search corporate records",
-      description: "Minutes, resolutions, and charters",
-      icon: <DescriptionOutlinedIcon sx={{ fontSize: 20 }} />,
     },
   ];
 
@@ -354,8 +469,6 @@ function ChatSection() {
             variant="outlined"
             color="inherit"
             size="large"
-            data-atlas-component="Button"
-            data-atlas-variant="outlined - secondary - lg"
             sx={{
               display: "flex",
               flexDirection: "column",
@@ -393,19 +506,59 @@ function ChatSection() {
   );
 }
 
-function EntityStatusSummary() {
+/* ─── ActiveAuditEngagements ─────────────────────────────────────────────────── */
+
+function ActiveAuditEngagements() {
   const { color, weight, radius } = useTokens();
 
-  const flaggedEntities = [
-    { name: "Aether Holdings Ltd", jurisdiction: "England & Wales", status: "Action required", statusColor: color.status.error.default, issue: "Director vacancy — appointment overdue", nextDeadline: "Apr 8" },
-    { name: "Zenith Compliance Services", jurisdiction: "Ireland", status: "Filing overdue", statusColor: color.status.error.default, issue: "Annual return past due by 2 days", nextDeadline: "Overdue" },
+  const engagements = [
+    {
+      name: "IT general controls — access & change",
+      linkedTo: "ERM-IT-014 · Top enterprise risk",
+      status: "Fieldwork",
+      statusColor: color.action.primary.default,
+      openIssues: "4",
+      scope: "3 regions",
+    },
+    {
+      name: "Third-party vendor assurance",
+      linkedTo: "Audit plan · Supply chain",
+      status: "Fieldwork",
+      statusColor: color.action.primary.default,
+      openIssues: "1",
+      scope: "8 vendors",
+    },
+    {
+      name: "Revenue recognition — Q2 close",
+      linkedTo: "FIN-RISK-08 · Financial reporting",
+      status: "Reporting",
+      statusColor: color.status.success.default,
+      openIssues: "2",
+      scope: "5 entities",
+    },
+    {
+      name: "SOX IT controls testing",
+      linkedTo: "SOX 404 program",
+      status: "Fieldwork",
+      statusColor: color.action.primary.default,
+      openIssues: "0",
+      scope: "12 applications",
+    },
+    {
+      name: "Payroll & compensation controls",
+      linkedTo: "HR-OPS-2025 · Process audit",
+      status: "Planning",
+      statusColor: color.type.muted,
+      openIssues: "—",
+      scope: "4 countries",
+    },
   ];
 
   return (
     <ContentCard>
       <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: "16px" }}>
         <TradAtlasText semanticFont={SF.titleH4Emphasis} sx={{ fontWeight: weight.semiBold, color: color.type.default }}>
-          Entities requiring attention
+          Active audit engagements
         </TradAtlasText>
         <Box
           component="span"
@@ -418,12 +571,13 @@ function EntityStatusSummary() {
             "&:hover": { textDecoration: "underline" },
           }}
         >
-          View all 47 entities →
+          View plan & engagement list →
         </Box>
       </Box>
 
       <TradAtlasText semanticFont={SF.textMd} sx={{ color: color.type.muted, mb: "16px" }}>
-        {flaggedEntities.length} entities flagged — 45 entities in good standing are not shown.
+        {engagements.length} engagements in flight — fieldwork, reporting, and planning tied to the risk-based audit plan
+        and enterprise risks (workpaper review and stakeholder check-ins tracked per engagement).
       </TradAtlasText>
 
       <Box
@@ -436,68 +590,50 @@ function EntityStatusSummary() {
         <Box
           sx={{
             display: "grid",
-            gridTemplateColumns: "1.8fr 1.2fr 1.2fr 1.5fr 0.8fr",
+            gridTemplateColumns: "1.5fr 1.2fr 1fr 0.85fr 1fr",
             px: "20px",
             py: "10px",
             borderBottom: `1px solid ${color.outline.fixed}`,
             background: color.surface.subtle,
           }}
         >
-          {["Entity", "Jurisdiction", "Status", "Issue", "Deadline"].map((h) => (
-            <TradAtlasText
-              key={h}
-              semanticFont={SF.textSmUppercase}
-              sx={{ color: color.type.muted }}
-            >
+          {["Engagement", "Risk / plan link", "Status", "Open issues", "Scope"].map((h) => (
+            <TradAtlasText key={h} semanticFont={SF.textSmUppercase} sx={{ color: color.type.muted }}>
               {h}
             </TradAtlasText>
           ))}
         </Box>
 
-        {flaggedEntities.map((e, i) => (
+        {engagements.map((row, i) => (
           <Box
-            key={e.name}
+            key={row.name}
             sx={{
               display: "grid",
-              gridTemplateColumns: "1.8fr 1.2fr 1.2fr 1.5fr 0.8fr",
+              gridTemplateColumns: "1.5fr 1.2fr 1fr 0.85fr 1fr",
               px: "20px",
               py: "12px",
-              borderBottom: i < flaggedEntities.length - 1 ? `1px solid ${color.outline.fixed}` : "none",
+              borderBottom: i < engagements.length - 1 ? `1px solid ${color.outline.fixed}` : "none",
               alignItems: "center",
               "&:hover": { background: color.surface.subtle },
             }}
           >
             <TradAtlasText semanticFont={SF.textMd} sx={{ fontWeight: weight.medium, color: color.type.default }}>
-              {e.name}
+              {row.name}
             </TradAtlasText>
-            <TradAtlasText semanticFont={SF.textMd} sx={{ color: color.type.muted }}>
-              {e.jurisdiction}
+            <TradAtlasText semanticFont={SF.textMd} sx={{ color: color.type.muted, fontFamily: atlasFontFamilyMono }}>
+              {row.linkedTo}
             </TradAtlasText>
             <Box sx={{ display: "flex", alignItems: "center", gap: "6px" }}>
-              <Box
-                sx={{
-                  width: 8,
-                  height: 8,
-                  borderRadius: "50%",
-                  background: e.statusColor,
-                  flexShrink: 0,
-                }}
-              />
+              <Box sx={{ width: 8, height: 8, borderRadius: "50%", background: row.statusColor, flexShrink: 0 }} />
               <TradAtlasText semanticFont={SF.labelMdCompact} sx={{ color: color.type.default }}>
-                {e.status}
+                {row.status}
               </TradAtlasText>
             </Box>
-            <TradAtlasText semanticFont={SF.labelMd} sx={{ color: color.type.muted }}>
-              {e.issue}
+            <TradAtlasText semanticFont={SF.textMd} sx={{ color: color.type.muted, fontWeight: weight.semiBold }}>
+              {row.openIssues}
             </TradAtlasText>
-            <TradAtlasText
-              semanticFont={SF.textMd}
-              sx={{
-                color: e.nextDeadline === "Overdue" ? color.status.error.text : color.type.muted,
-                fontWeight: e.nextDeadline === "Overdue" ? weight.semiBold : weight.regular,
-              }}
-            >
-              {e.nextDeadline}
+            <TradAtlasText semanticFont={SF.textMd} sx={{ color: color.type.muted }}>
+              {row.scope}
             </TradAtlasText>
           </Box>
         ))}
@@ -506,35 +642,37 @@ function EntityStatusSummary() {
   );
 }
 
+/* ─── AgentActivity ────────────────────────────────────────────────────────── */
+
 function AgentActivity() {
   const { color, weight, radius } = useTokens();
 
   const activities = [
     {
-      title: "Subsidiary director appointment — Aether Holdings Ltd",
-      agent: "Board appointment agent",
+      title: "IT general controls — access & change testing",
+      agent: "Control testing agent",
       status: "In progress",
       statusColor: color.action.primary.default,
-      progress: 35,
-      step: "Eligibility screening: reviewing candidate qualifications and conflict-of-interest declarations",
-      updated: "12 min ago",
+      progress: 40,
+      step: "Full-population sample of access grants; reconciling to change tickets and workpaper sign-off",
+      updated: "8 min ago",
     },
     {
-      title: "Q2 board pack assembly — Meridian Corp",
-      agent: "Board meeting prep agent",
+      title: "Q2 audit committee report assembly",
+      agent: "Report assembly agent",
       status: "In progress",
       statusColor: color.action.primary.default,
-      progress: 72,
-      step: "Collecting committee reports from audit and risk chairs",
-      updated: "28 min ago",
+      progress: 68,
+      step: "Compiling control testing results and remediation status summaries",
+      updated: "35 min ago",
     },
     {
-      title: "Annual return filing — Zenith Compliance Services",
-      agent: "Filing deadline agent",
+      title: "Remediation validation — IT general controls",
+      agent: "Remediation tracking agent",
       status: "Awaiting review",
       statusColor: color.status.warning.default,
-      progress: 90,
-      step: "Draft filing prepared — pending your review before submission to CRO",
+      progress: 92,
+      step: "Management remediation evidence collected — pending auditor sign-off",
       updated: "1 hr ago",
     },
   ];
@@ -607,10 +745,7 @@ function AgentActivity() {
                   height: 4,
                   borderRadius: 2,
                   backgroundColor: color.outline.fixed,
-                  "& .MuiLinearProgress-bar": {
-                    backgroundColor: a.statusColor,
-                    borderRadius: 2,
-                  },
+                  "& .MuiLinearProgress-bar": { backgroundColor: a.statusColor, borderRadius: 2 },
                 }}
               />
             </Box>
@@ -625,25 +760,27 @@ function AgentActivity() {
   );
 }
 
+/* ─── ProactiveTasks ───────────────────────────────────────────────────────── */
+
 function ProactiveTasks() {
   const { color, weight, radius } = useTokens();
 
   const tasks = [
     {
-      title: "Prepare for subsidiary board appointments",
-      description: "Review the skills matrix and succession plan for Aether Holdings Ltd. Identify qualified candidates, verify eligibility against articles of association, and prepare appointment documentation for the nominations committee.",
+      title: "Annual audit plan refresh",
+      description: "Review the risk-based audit plan against recent incidents, regulatory changes, and management requests. Reprioritize engagements using real-time risk data from the enterprise risk register.",
     },
     {
-      title: "Quarterly governance policy review",
-      description: "Compare current board governance policy, code of conduct, and delegation of authority documents against recent regulatory guidance and industry best practices. Flag any gaps for the governance committee.",
+      title: "Continuous monitoring rule set review",
+      description: "Evaluate automated control monitoring coverage across IT general controls and application controls. Identify gaps where AI-powered analytics could replace periodic sampling.",
     },
     {
-      title: "Board evaluation follow-up",
-      description: "Compile outstanding action items from the most recent board and committee self-assessments. Draft a progress summary for the chair and identify any items at risk of slipping.",
+      title: "Cross-functional assurance mapping",
+      description: "Coordinate with Risk, Compliance, and IT Security on shared controls and testing coverage. Reduce duplication and close coverage gaps across the three lines of defense.",
     },
     {
-      title: "Entity structure simplification review",
-      description: "Analyse the group structure for dormant or redundant subsidiaries that could be dissolved or merged. Prepare a cost-benefit summary and regulatory impact assessment for leadership review.",
+      title: "Audit methodology template update",
+      description: "Standardize work programs, rating scales, and issue classifications for global consistency. Update scoping templates to incorporate AI-assisted full-population testing.",
     },
   ];
 
@@ -683,8 +820,6 @@ function ProactiveTasks() {
                 variant="outlined"
                 color="inherit"
                 size="small"
-                data-atlas-component="Button"
-                data-atlas-variant="outlined - secondary - sm"
                 sx={{
                   ...semanticFontStyle(SF.labelMd),
                   px: "14px",
@@ -701,8 +836,6 @@ function ProactiveTasks() {
                 variant="text"
                 color="inherit"
                 size="small"
-                data-atlas-component="Button"
-                data-atlas-variant="text - tertiary - sm"
                 sx={{
                   ...semanticFontStyle(SF.labelMd),
                   px: "14px",
@@ -723,14 +856,124 @@ function ProactiveTasks() {
   );
 }
 
+/* ─── OperationalTrends ────────────────────────────────────────────────────── */
+
+function OperationalTrends() {
+  const { color, weight, radius } = useTokens();
+
+  const trends = [
+    {
+      label: "Plan completion",
+      value: "75%",
+      description: "Audits completed vs planned — FY 2026 year to date.",
+      trend: "up" as const,
+      trendLabel: "+8% vs prior quarter",
+    },
+    {
+      label: "Issue closure rate",
+      value: "87%",
+      description: "Audit issues remediated within target window — rolling 90 days.",
+      trend: "up" as const,
+      trendLabel: "+5% vs prior quarter",
+    },
+    {
+      label: "Mean days to close",
+      value: "34",
+      description: "Average remediation time for audit issues — rolling 90 days.",
+      trend: "down" as const,
+      trendLabel: "+6 days vs target",
+    },
+  ];
+
+  const miniChart = (trend: "up" | "down") => {
+    const points =
+      trend === "up"
+        ? "0,20 15,18 30,15 45,16 60,12 75,8 90,5 105,3 120,2"
+        : "0,5 15,4 30,8 45,6 60,10 75,14 90,16 105,15 120,18";
+    const lineColor = trend === "up" ? color.status.success.default : color.status.error.default;
+
+    return (
+      <svg width="120" height="24" viewBox="0 0 120 24" fill="none">
+        <polyline
+          points={points}
+          fill="none"
+          stroke={lineColor}
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    );
+  };
+
+  return (
+    <ContentCard>
+      <TradAtlasText semanticFont={SF.titleH4Emphasis} sx={{ fontWeight: weight.semiBold, color: color.type.default, mb: "4px" }}>
+        Key operational trends
+      </TradAtlasText>
+      <TradAtlasText semanticFont={SF.textMd} sx={{ color: color.type.muted, mb: "16px" }}>
+        Rolling audit program metrics across all engagements (demo data).
+      </TradAtlasText>
+
+      <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr 1fr" }, gap: "12px" }}>
+        {trends.map((t) => (
+          <Box
+            key={t.label}
+            sx={{
+              borderRadius: radius.md,
+              border: `1px solid ${color.outline.fixed}`,
+              background: color.surface.subtle,
+              p: "16px",
+              display: "flex",
+              flexDirection: "column",
+              gap: "10px",
+            }}
+          >
+            <TradAtlasText semanticFont={SF.textSmUppercase} sx={{ color: color.type.muted }}>
+              {t.label}
+            </TradAtlasText>
+            <Box sx={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between" }}>
+              <TradAtlasText semanticFont={SF.titleH2Emphasis} sx={{ fontWeight: weight.bold, color: color.type.default }}>
+                {t.value}
+              </TradAtlasText>
+              {miniChart(t.trend)}
+            </Box>
+            <TradAtlasText semanticFont={SF.textSm} sx={{ color: color.type.muted }}>
+              {t.description}
+            </TradAtlasText>
+            <Box sx={{ display: "flex", alignItems: "center", gap: "4px" }}>
+              {t.trend === "up" ? (
+                <TrendingUpOutlinedIcon sx={{ fontSize: 16, color: color.status.success.default }} />
+              ) : (
+                <TrendingDownOutlinedIcon sx={{ fontSize: 16, color: color.status.error.default }} />
+              )}
+              <TradAtlasText
+                semanticFont={SF.textSm}
+                sx={{
+                  color: t.trend === "up" ? color.status.success.text : color.status.error.text,
+                  fontWeight: weight.medium,
+                }}
+              >
+                {t.trendLabel}
+              </TradAtlasText>
+            </Box>
+          </Box>
+        ))}
+      </Box>
+    </ContentCard>
+  );
+}
+
+/* ─── RecentActivity ───────────────────────────────────────────────────────── */
+
 function RecentActivity() {
   const { color, weight, radius } = useTokens();
 
   const items = [
-    { category: "Board meeting", text: "Q2 board meeting agenda approved by chair", time: "2 hours ago", icon: <EventOutlinedIcon sx={{ fontSize: 18 }} /> },
-    { category: "Entity management", text: "Meridian Asia Pacific Pte annual return filed with ACRA", time: "5 hours ago", icon: <BusinessOutlinedIcon sx={{ fontSize: 18 }} /> },
-    { category: "Governance", text: "Updated delegation of authority policy uploaded for board review", time: "1 day ago", icon: <GavelOutlinedIcon sx={{ fontSize: 18 }} /> },
-    { category: "Board appointment", text: "Director candidate shortlist reviewed by nominations committee", time: "2 days ago", icon: <GroupsOutlinedIcon sx={{ fontSize: 18 }} /> },
+    { category: "Control testing", text: "Access management control tests completed for 12 applications", time: "2 hours ago", icon: <FactCheckOutlinedIcon sx={{ fontSize: 18 }} /> },
+    { category: "Report", text: "Draft Q2 audit committee pack shared with CAE for review", time: "5 hours ago", icon: <SummarizeOutlinedIcon sx={{ fontSize: 18 }} /> },
+    { category: "Issue management", text: "3 remediation items validated and closed this week", time: "1 day ago", icon: <TaskAltOutlinedIcon sx={{ fontSize: 18 }} /> },
+    { category: "Engagement", text: "Payroll & compensation engagement — scope and criteria approved by CAE", time: "2 days ago", icon: <AssessmentOutlinedIcon sx={{ fontSize: 18 }} /> },
   ];
 
   return (
@@ -783,126 +1026,17 @@ function RecentActivity() {
   );
 }
 
-function OperationalTrends() {
-  const { color, weight, radius } = useTokens();
-
-  const trends = [
-    {
-      label: "Filings on time",
-      value: "96%",
-      description: "Entity filings submitted before deadline — rolling 90 days.",
-      trend: "up" as const,
-      trendLabel: "+4% vs prior quarter",
-    },
-    {
-      label: "Board pack completion",
-      value: "87%",
-      description: "Percentage of board packs fully assembled 5+ days before meeting.",
-      trend: "down" as const,
-      trendLabel: "-3% vs prior quarter",
-    },
-    {
-      label: "Open action items",
-      value: "12",
-      description: "Outstanding board and committee action items awaiting resolution.",
-      trend: "down" as const,
-      trendLabel: "+2 since last meeting",
-    },
-  ];
-
-  const miniChart = (trend: "up" | "down") => {
-    const points = trend === "up"
-      ? "0,20 15,18 30,15 45,16 60,12 75,8 90,5 105,3 120,2"
-      : "0,5 15,4 30,8 45,6 60,10 75,14 90,16 105,15 120,18";
-    const lineColor = trend === "up" ? color.status.success.default : color.status.error.default;
-
-    return (
-      <svg width="120" height="24" viewBox="0 0 120 24" fill="none">
-        <polyline
-          points={points}
-          fill="none"
-          stroke={lineColor}
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      </svg>
-    );
-  };
-
-  return (
-    <ContentCard>
-      <TradAtlasText semanticFont={SF.titleH4Emphasis} sx={{ fontWeight: weight.semiBold, color: color.type.default, mb: "4px" }}>
-        Key operational trends
-      </TradAtlasText>
-      <TradAtlasText semanticFont={SF.textMd} sx={{ color: color.type.muted, mb: "16px" }}>
-        Rolling 90-day view of governance operations across all entities (demo data).
-      </TradAtlasText>
-
-      <Box
-        sx={{
-          display: "grid",
-          gridTemplateColumns: { xs: "1fr", md: "1fr 1fr 1fr" },
-          gap: "12px",
-        }}
-      >
-        {trends.map((t) => (
-          <Box
-            key={t.label}
-            sx={{
-              borderRadius: radius.md,
-              border: `1px solid ${color.outline.fixed}`,
-              background: color.surface.subtle,
-              p: "16px",
-              display: "flex",
-              flexDirection: "column",
-              gap: "10px",
-            }}
-          >
-            <TradAtlasText semanticFont={SF.textSmUppercase} sx={{ color: color.type.muted }}>
-              {t.label}
-            </TradAtlasText>
-            <Box sx={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between" }}>
-              <TradAtlasText semanticFont={SF.titleH2Emphasis} sx={{ fontWeight: weight.bold, color: color.type.default }}>
-                {t.value}
-              </TradAtlasText>
-              {miniChart(t.trend)}
-            </Box>
-            <TradAtlasText semanticFont={SF.textSm} sx={{ color: color.type.muted }}>
-              {t.description}
-            </TradAtlasText>
-            <Box sx={{ display: "flex", alignItems: "center", gap: "4px" }}>
-              {t.trend === "up" ? (
-                <TrendingUpOutlinedIcon sx={{ fontSize: 16, color: color.status.success.default }} />
-              ) : (
-                <TrendingDownOutlinedIcon sx={{ fontSize: 16, color: color.status.error.default }} />
-              )}
-              <TradAtlasText
-                semanticFont={SF.textSm}
-                sx={{
-                  color: t.trend === "up" ? color.status.success.text : color.status.error.text,
-                  fontWeight: weight.medium,
-                }}
-              >
-                {t.trendLabel}
-              </TradAtlasText>
-            </Box>
-          </Box>
-        ))}
-      </Box>
-    </ContentCard>
-  );
-}
+/* ─── SystemLog ────────────────────────────────────────────────────────────── */
 
 function SystemLog() {
   const { color, weight, radius } = useTokens();
 
   const logs = [
-    "Entity compliance monitor: Quarterly compliance scan completed — 2 entities flagged for follow-up, 12 entities current.",
-    "Board calendar tracker: Confirmed quorum availability for Q2 Meridian Corp board meeting on April 18.",
-    "Filing deadline scanner: Zenith Compliance Services (Ireland) annual return draft prepared and staged for review.",
-    "Board appointment agent: Skills matrix comparison complete for Aether Holdings Ltd director vacancy — 3 candidates meet criteria.",
-    "Entity compliance monitor: NovaBridge Capital GmbH Handelsregister filing verified and archived.",
+    "Control testing agent: Access management control tests completed — 3 exceptions identified in privileged access reviews.",
+    "Report assembly agent: Q2 audit committee report draft 68% complete — awaiting IT security control findings.",
+    "Remediation tracker: Management evidence for ITGC-2024-012 received — validation in progress.",
+    "Risk assessment agent: Annual audit plan coverage updated — 87% alignment with top enterprise risks.",
+    "Continuous monitor: Automated SOX control testing detected 1 new exception in journal entry approval workflow.",
   ];
 
   return (
@@ -944,7 +1078,9 @@ function SystemLog() {
   );
 }
 
-export default function CorpSecCommandCenter() {
+/* ─── Page ─────────────────────────────────────────────────────────────────── */
+
+export default function AuditCommandCenter() {
   const { color } = useTokens();
 
   return (
@@ -979,8 +1115,8 @@ export default function CorpSecCommandCenter() {
         >
           <HeroBanner />
           <ChatSection />
-          <EntityPortfolio />
-          <EntityStatusSummary />
+          <AuditPosture />
+          <ActiveAuditEngagements />
           <AgentActivity />
           <ProactiveTasks />
           <OperationalTrends />

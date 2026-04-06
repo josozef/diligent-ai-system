@@ -22,9 +22,11 @@ interface ProjectCardProps {
   href?: string;
   comingSoon?: boolean;
   openInNewTab?: boolean;
+  /** Emphasize the tile (primary border and soft tint) — use for newly available prototypes. */
+  highlight?: boolean;
 }
 
-function ProjectCard({ title, description, icon, href, comingSoon, openInNewTab }: ProjectCardProps) {
+function ProjectCard({ title, description, icon, href, comingSoon, openInNewTab, highlight }: ProjectCardProps) {
   const navigate = useNavigate();
 
   const handleClick = () => {
@@ -46,19 +48,28 @@ function ProjectCard({ title, description, icon, href, comingSoon, openInNewTab 
         flexDirection: "column",
         gap: "12px",
         p: "24px",
-        border: `1px solid ${color.outline.fixed}`,
+        border: `1px solid ${highlight && !comingSoon ? color.action.primary.default : color.outline.fixed}`,
         borderRadius: radius.lg,
-        background: color.surface.default,
+        background:
+          highlight && !comingSoon ? color.status.notification.background : color.surface.default,
         textAlign: "left",
         cursor: comingSoon ? "default" : "pointer",
         opacity: comingSoon ? 0.55 : 1,
-        transition: "box-shadow 0.2s ease, border-color 0.2s ease",
-        ...(!comingSoon && {
-          "&:hover": {
-            borderColor: color.outline.hover,
-            boxShadow: "0 2px 8px rgba(36, 38, 40, 0.08)",
-          },
-        }),
+        transition: "box-shadow 0.2s ease, border-color 0.2s ease, background 0.2s ease",
+        ...(!comingSoon &&
+          !highlight && {
+            "&:hover": {
+              borderColor: color.outline.hover,
+              boxShadow: "0 2px 8px rgba(36, 38, 40, 0.08)",
+            },
+          }),
+        ...(highlight &&
+          !comingSoon && {
+            "&:hover": {
+              borderColor: color.action.primary.hover,
+              boxShadow: "0 4px 14px rgba(0, 64, 213, 0.14)",
+            },
+          }),
       }}
     >
       <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
@@ -67,11 +78,11 @@ function ProjectCard({ title, description, icon, href, comingSoon, openInNewTab 
             width: 40,
             height: 40,
             borderRadius: radius.md,
-            background: color.surface.subtle,
+            background: highlight && !comingSoon ? "#ffffff" : color.surface.subtle,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            color: color.type.default,
+            color: highlight && !comingSoon ? color.action.primary.default : color.type.default,
           }}
         >
           {icon}
@@ -224,9 +235,11 @@ export default function HubPage() {
           />
           <ProjectCard
             title="Audit and compliance"
-            description="Compliance monitoring, audit readiness scores, and remediation tracking."
+            description="Internal audit command center — control assessments, committee reporting, and remediation oversight for board assurance."
             icon={<FactCheckOutlinedIcon sx={{ fontSize: 22 }} />}
-            comingSoon
+            href="/audit"
+            openInNewTab
+            highlight
           />
         </Section>
 
