@@ -4,7 +4,7 @@ import type { SxProps, Theme } from "@mui/material/styles";
 
 import { atlasSemanticColor } from "../../tokens/atlasLight";
 import TradAtlasText from "./TradAtlasText";
-import { SF } from "../../tokens/tradAtlasSemanticTypography";
+import { SF, type SemanticFontPath } from "../../tokens/tradAtlasSemanticTypography";
 
 export type PulsingStatusTone = "info" | "success" | "warning" | "error" | "neutral";
 export type PulsingStatusSize = "sm" | "md" | "lg";
@@ -37,7 +37,7 @@ export interface PulsingStatusDotProps {
  * The ring animates from ~60% → ~220% of the core so the halo
  * blooms outward without ever fully obscuring surrounding text.
  * ──────────────────────────────────────────────────────────── */
-const SIZE_TOKENS: Record<PulsingStatusSize, { dot: number; ring: number; font: typeof SF.textMicro }> = {
+const SIZE_TOKENS: Record<PulsingStatusSize, { dot: number; ring: number; font: SemanticFontPath }> = {
   sm: { dot: 6,  ring: 14, font: SF.textMicro },
   md: { dot: 8,  ring: 18, font: SF.textSm },
   lg: { dot: 10, ring: 24, font: SF.textSm },
